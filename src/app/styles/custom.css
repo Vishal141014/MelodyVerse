@@ -1,0 +1,134 @@
+/* Custom Pink Theme Styles */
+
+/* Color variables */
+:root {
+  --pink-50: #FFF1F6;
+  --pink-100: #FFE4ED;
+  --pink-200: #FFD1DC;
+  --pink-300: #FFB7CA;
+  --pink-400: #FF8CAC;
+  --pink-500: #EC407A;
+  --pink-600: #C2185B;
+  --pink-700: #AD1457;
+  --pink-800: #880E4F;
+}
+
+/* Basic Elements */
+body {
+  background-color: var(--pink-200);
+  color: var(--pink-600);
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--pink-600);
+}
+
+/* Buttons */
+.btn-pink-primary {
+  background: linear-gradient(135deg, var(--pink-500), var(--pink-600));
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(194, 24, 91, 0.2);
+}
+
+.btn-pink-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(194, 24, 91, 0.3);
+}
+
+.btn-pink-secondary {
+  background-color: white;
+  color: var(--pink-600);
+  border: 1px solid rgba(255, 183, 202, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(194, 24, 91, 0.1);
+}
+
+.btn-pink-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(194, 24, 91, 0.15);
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Chat bubbles styled directly */
+.chat-bubble-sent {
+  background: linear-gradient(135deg, var(--pink-500), var(--pink-600));
+  color: white;
+  border-radius: 18px 18px 4px 18px;
+  padding: 12px 16px;
+  max-width: 80%;
+  align-self: flex-end;
+  box-shadow: 0 2px 8px rgba(194, 24, 91, 0.2);
+}
+
+.chat-bubble-received {
+  background-color: white;
+  color: var(--pink-700);
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  max-width: 80%;
+  align-self: flex-start;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.chat-timestamp {
+  font-size: 0.75rem;
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* Input fields */
+.input-pink {
+  background-color: white;
+  border: 1px solid rgba(255, 183, 202, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: var(--pink-700);
+  width: 100%;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(194, 24, 91, 0.05);
+}
+
+.input-pink:focus {
+  outline: none;
+  border-color: var(--pink-400);
+  box-shadow: 0 3px 8px rgba(194, 24, 91, 0.1);
+}
+
+/* Cards and containers */
+.card-pink {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 183, 202, 0.3);
+  box-shadow: 0 4px 15px rgba(194, 24, 91, 0.1);
+}
+
+.gradient-pink-bg {
+  background: linear-gradient(135deg, var(--pink-300), var(--pink-100));
+}
+
+/* Loading spinner */
+.spinner-pink {
+  border: 3px solid rgba(255, 183, 202, 0.3);
+  border-top: 3px solid var(--pink-600);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+} 
