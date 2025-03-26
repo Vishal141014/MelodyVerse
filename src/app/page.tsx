@@ -58,11 +58,14 @@ const Home = () => {
     try {
       // Direct socket.io connection approach
       const socketIo = await import('socket.io-client');
-      const socket = socketIo.default('http://localhost:3001', {
-        transports: ['websocket', 'polling'], // Add polling as a fallback
-        timeout: 20000, // Increase timeout to 20 seconds
+      const socketUrl = 'https://melody-verse-socket-server.onrender.com';
+      console.log(`Connecting to socket server at: ${socketUrl}`);
+      
+      const socket = socketIo.default(socketUrl, {
+        transports: ['websocket', 'polling'],
+        timeout: 30000,
         reconnection: true,
-        reconnectionAttempts: 3,
+        reconnectionAttempts: 5,
         reconnectionDelay: 1000
       });
       
@@ -75,11 +78,11 @@ const Home = () => {
         
         socket.on('connect_error', (error) => {
           console.error('Connection error:', error);
-          reject(new Error(`Connection error: ${error.message}`));
+          reject(new Error(`Server connection failed: ${error.message}`));
         });
         
         // Set a timeout in case the connection hangs
-        setTimeout(() => reject(new Error('Connection timeout after 8 seconds')), 8000);
+        setTimeout(() => reject(new Error('Connection timeout after 10 seconds')), 10000);
       });
       
       // Once connected, emit room creation request
@@ -100,10 +103,10 @@ const Home = () => {
         if (!roomCreated) {
           console.error('Room creation timed out');
           socket.disconnect();
-          setError('Room creation timed out. Please check if the server is running at http://localhost:3001');
+          setError('Server connection failed. Please try again later.');
           setIsCreatingRoom(false);
         }
-      }, 10000);
+      }, 12000);
       
     } catch (error) {
       console.error('Error creating room:', error);

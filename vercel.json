@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
@@ -6,11 +7,12 @@
   "regions": ["iad1"],
   "env": {
     "NEXT_PUBLIC_YOUTUBE_API_KEY": "your-youtube-api-key-here",
-    "NEXT_PUBLIC_SOCKET_URL": "your-socket-server-url-here"
+    "NEXT_PUBLIC_SOCKET_URL": "https://melody-verse-socket-server.onrender.com",
+    "NEXT_PUBLIC_APP_URL": "https://melody-verse-rho.vercel.app"
   },
   "builds": [
     {
-      "src": "next.config.js",
+      "src": "package.json",
       "use": "@vercel/next"
     }
   ]
