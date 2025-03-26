@@ -10,20 +10,22 @@ import MessageList from "./MessageList";
 import RoomHeader from "./RoomHeader";
 import ProfileSettings from "../user/ProfileSettings";
 import { FaSearch, FaMusic, FaTimes, FaPaperPlane, FaSmile } from "react-icons/fa";
+import SystemMessage from './SystemMessage';
 
 interface ChatRoomProps {
   roomId: string;
 }
 
 interface Message {
-  id?: string;
-  roomId: string;
-  message: string;
-  senderId: string;
-  senderName?: string;
-  type: 'text' | 'system';
-  content: any;
-  timestamp: number;
+  id: string;
+  sender?: {
+    id: string;
+    username: string;
+    color?: string;
+  };
+  type: 'text' | 'emoji' | 'gif' | 'system';
+  content: string;
+  timestamp: string;
 }
 
 interface TypingUser {
@@ -315,17 +317,30 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ roomId }) => {
           {/* Messages list */}
           <div className="flex-grow overflow-y-auto p-4 space-y-2">
             {chatMessages.map((msg, index) => (
-              <div 
-                key={msg.id || `${msg.timestamp}-${index}`}
-                className={`max-w-[85%] ${msg.senderId === username ? 'ml-auto bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'} rounded-lg p-3`}
-              >
-                {msg.senderId !== username && (
-                  <div className="font-bold text-xs mb-1">{msg.senderId}</div>
+              <div key={msg.id || index} className="mb-4">
+                {msg.type === 'system' ? (
+                  <SystemMessage content={msg.content} />
+                ) : (
+                  <div className={`flex ${msg.sender?.id === username ? 'justify-end' : 'justify-start'}`}>
+                    <div 
+                      className={`max-w-[80%] rounded-lg p-3 ${
+                        msg.sender?.id === username 
+                          ? 'bg-pink-dark text-white rounded-tr-none' 
+                          : 'bg-white border border-pink-100 rounded-tl-none'
+                      }`}
+                    >
+                      {msg.sender?.id !== username && (
+                        <div className="text-xs font-semibold text-pink-dark/80 mb-1">
+                          {msg.sender?.username}
+                        </div>
+                      )}
+                      <div>{msg.content}</div>
+                      <div className="text-xs opacity-60 text-right mt-1">
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
                 )}
-                <div>{msg.message}</div>
-                <div className="text-xs opacity-70 mt-1 text-right">
-                  {formatTimestamp(msg.timestamp)}
-                </div>
               </div>
             ))}
             

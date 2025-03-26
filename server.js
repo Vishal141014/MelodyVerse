@@ -79,20 +79,46 @@ io.on('connection', (socket) => {
 
   // Handle joining a room
   socket.on('join-room', ({ roomId, username }) => {
-    console.log(`User ${username} (${socket.id}) joining room ${roomId}`);
+    console.log(`User ${socket.id} (${username}) is joining room ${roomId}`);
+    
+    // Store room ID in socket data for later reference (disconnection)
+    socket.data.roomId = roomId;
     
     // Check if room exists
     if (!rooms[roomId]) {
-      socket.emit('room:error', { message: 'Room not found' });
-      return;
+      console.log(`Creating new room: ${roomId}`);
+      // Create new room with this user as host
+      rooms[roomId] = {
+        id: roomId,
+        hostId: socket.id,
+        users: [],
+        playlist: [],
+        messages: [],
+        currentVideo: null,
+        isPlaying: false,
+        currentTime: 0
+      };
     }
     
-    // Join the socket.io room
-    socket.join(roomId);
-    
-    // Add user to the room
-    const newUser = { id: socket.id, username };
-    rooms[roomId].users.push(newUser);
+    // Add user to room if not already in
+    const existingUser = rooms[roomId].users.find(user => user.id === socket.id);
+    if (!existingUser) {
+      rooms[roomId].users.push({
+        id: socket.id,
+        username: username
+      });
+      
+      // Join the socket.io room
+      socket.join(roomId);
+      
+      // Send a system message that user joined
+      io.to(roomId).emit('chat:message', {
+        id: generateId(),
+        type: 'system',
+        content: `${username} has joined the room`,
+        timestamp: new Date().toISOString()
+      });
+    }
     
     // Initialize typing for this room if needed
     if (!typingUsers[roomId]) {
@@ -110,7 +136,7 @@ io.on('connection', (socket) => {
     });
     
     // Notify others that user joined
-    socket.to(roomId).emit('user:joined', { user: newUser });
+    socket.to(roomId).emit('user:joined', { user: existingUser || { id: socket.id, username } });
     
     // Update all clients with the new user list
     io.to(roomId).emit('users:update', {
@@ -119,7 +145,6 @@ io.on('connection', (socket) => {
     });
     
     // Store the roomId in the socket for reference on disconnect
-    socket.data.roomId = roomId;
     socket.data.username = username;
     
     console.log(`User ${username} joined room ${roomId}`);
@@ -582,52 +607,45 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);
     
-    const roomId = socket.data.roomId;
-    if (!roomId || !rooms[roomId]) return;
+    // Get user's room and username
+    const userRoomId = Object.keys(rooms).find(roomId => 
+      rooms[roomId]?.users?.find(user => user.id === socket.id)
+    );
     
-    // Remove from typing users if present
-    if (typingUsers[roomId] && typingUsers[roomId][socket.id]) {
-      delete typingUsers[roomId][socket.id];
-    }
-    
-    // Remove user from the room
-    const userIndex = rooms[roomId].users.findIndex(u => u.id === socket.id);
-    if (userIndex !== -1) {
-      const user = rooms[roomId].users[userIndex];
-      rooms[roomId].users.splice(userIndex, 1);
+    if (userRoomId && rooms[userRoomId]) {
+      // Find user to get their username before removing
+      const disconnectedUser = rooms[userRoomId].users.find(user => user.id === socket.id);
+      const username = disconnectedUser?.username || 'Someone';
       
-      // Notify room that user left
-      io.to(roomId).emit('user:left', { userId: socket.id, username: user.username });
+      // Remove user from room
+      rooms[userRoomId].users = rooms[userRoomId].users.filter(user => user.id !== socket.id);
       
-      // Update all clients with the new user list
-      io.to(roomId).emit('users:update', {
-        users: rooms[roomId].users,
-        hostId: rooms[roomId].hostId
-      });
-      
-      console.log(`User ${user.username} left room ${roomId}`);
-    }
-    
-    // If this was the host, assign a new host or delete the room
-    if (rooms[roomId].hostId === socket.id) {
-      if (rooms[roomId].users.length > 0) {
-        // Assign the first remaining user as host
-        rooms[roomId].hostId = rooms[roomId].users[0].id;
-        
-        // Notify room of new host
-        io.to(roomId).emit('room:host', { hostId: rooms[roomId].hostId });
-        console.log(`New host for room ${roomId}: ${rooms[roomId].hostId}`);
-        
-        // Update user list with new host
-        io.to(roomId).emit('users:update', {
-          users: rooms[roomId].users,
-          hostId: rooms[roomId].hostId
-        });
+      // Check if room is empty
+      if (rooms[userRoomId].users.length === 0) {
+        console.log(`Room ${userRoomId} is empty, removing`);
+        delete rooms[userRoomId];
       } else {
-        // No users left, delete the room
-        delete rooms[roomId];
-        delete typingUsers[roomId];
-        console.log(`Room ${roomId} deleted (no users left)`);
+        // If not empty, check if host left
+        if (socket.id === rooms[userRoomId].hostId) {
+          // Assign a new host
+          const newHost = rooms[userRoomId].users[0];
+          rooms[userRoomId].hostId = newHost.id;
+          console.log(`New host for room ${userRoomId}: ${newHost.username} (${newHost.id})`);
+        }
+        
+        // Send updated user list to remaining users
+        io.to(userRoomId).emit('users:update', { 
+          users: rooms[userRoomId].users,
+          hostId: rooms[userRoomId].hostId
+        });
+        
+        // Send a system message that user left
+        io.to(userRoomId).emit('chat:message', {
+          id: generateId(),
+          type: 'system',
+          content: `${username} has left the room`,
+          timestamp: new Date().toISOString()
+        });
       }
     }
   });
@@ -656,4 +674,9 @@ process.on('uncaughtException', (error) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled rejection at:', promise, 'reason:', reason);
-}); 
+});
+
+// Helper function to generate unique IDs for messages
+const generateId = () => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}; 
