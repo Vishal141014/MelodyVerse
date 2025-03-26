@@ -1,25 +1,28 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { Socket } from 'socket.io-client';
-import PlayerControls from './PlayerControls';
-import { FaSearch, FaMusic, FaPlay, FaPause } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { FaPlay, FaPause, FaSync, FaVolumeMute, FaVolumeUp, FaMusic } from 'react-icons/fa';
+import PlayerControls from './PlayerControls';
 import Playlist from '../Playlist';
 
-// Add YouTube API types
-declare global {
-  interface Window {
-    YT: {
-      Player: typeof YT.Player;
-      PlayerState: {
-        PLAYING: number;
-        PAUSED: number;
-        ENDED: number;
-      };
-    };
-    onYouTubeIframeAPIReady: () => void;
-  }
-}
+// Let TypeScript know we're going to reference the YT object from the YouTube API
+// This is now defined in src/types/youtube.d.ts so we can remove the declaration here
+// declare global {
+//   interface Window {
+//     YT: {
+//       Player: any;
+//       PlayerState: {
+//         PLAYING: number;
+//         PAUSED: number;
+//         ENDED: number;
+//         BUFFERING: number;
+//         CUED: number;
+//       };
+//     };
+//     onYouTubeIframeAPIReady: () => void;
+//   }
+// }
 
 interface YouTubePlayerProps {
   socket: Socket | null;
@@ -60,16 +63,22 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   useEffect(() => {
     console.log("INITIALIZING: YouTube player component mounted");
     
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      console.log("Not in browser environment, skipping YouTube API initialization");
+      return;
+    }
+    
     // Function to create and initialize the YouTube player
     const createYouTubePlayer = () => {
       // Load YouTube API if not already loaded
       if (!window.YT) {
         console.log("Loading YouTube API script");
         const tag = document.createElement('script');
+        tag.id = 'youtube-iframe-api';
         tag.src = 'https://www.youtube.com/iframe_api';
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        if (firstScriptTag && firstScriptTag.parentNode) {
-          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        if (document.getElementsByTagName('script')[0] && document.getElementsByTagName('script')[0].parentNode) {
+          document.getElementsByTagName('script')[0].parentNode.insertBefore(tag, document.getElementsByTagName('script')[0]);
         } else {
           document.head.appendChild(tag);
         }
@@ -120,6 +129,12 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   // Initialize or update the YouTube player (hidden, audio only)
   const initializePlayer = () => {
     try {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        console.log("Not in browser environment, skipping YouTube player initialization");
+        return;
+      }
+
       console.log("Attempting to initialize hidden YouTube player");
       
       // Only initialize if YouTube API is available
