@@ -146,6 +146,10 @@ melodyverse/
 - **Sync Issues**: Click the "Sync" button to manually synchronize with the room state if playback seems out of sync
 - **Connection Issues**: If you experience connection issues, try refreshing the page or recreating the room
 
+## Author
+- VISHAL ( https://github.com/vishal141014/ )
+- NIKITA ( https://github.com/nikita-1414/ )
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details. 
