@@ -3,6 +3,7 @@ import './styles/custom.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import StoreProvider from './StoreProvider'
+import RootLayoutWrapper from './RootLayoutWrapper'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -30,7 +31,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased text-foreground bg-background min-h-screen">
         <StoreProvider>
-          {children}
+          <RootLayoutWrapper>
+            {children}
+          </RootLayoutWrapper>
         </StoreProvider>
       </body>
     </html>
