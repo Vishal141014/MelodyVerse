@@ -28,6 +28,7 @@ MelodyVerse is a real-time music sharing platform where users can join rooms, li
 
 - Node.js 18+ 
 - npm or yarn
+- YouTube API key from Google Cloud Console
 
 ### Installation
 
@@ -44,34 +45,41 @@ npm install
 yarn
 ```
 
-3. Create a `.env.local` file in the root directory with the following variables:
-```
-NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
-NEXT_PUBLIC_YOUTUBE_API_KEY=your_youtube_api_key
-```
+3. Set up environment variables for local development:
+   - Copy `.env.example` to a new file named `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   - Edit the `.env` file and add your YouTube API key:
+   ```
+   NEXT_PUBLIC_YOUTUBE_API_KEY=your_youtube_api_key_here
+   YOUTUBE_API_KEY=your_youtube_api_key_here
+   ```
 
-You'll need to get a YouTube Data API key from the [Google Cloud Console](https://console.cloud.google.com/apis/dashboard) to enable video search functionality.
+   **IMPORTANT:** Never commit your actual API keys. The `.env` and `.env*.local` files are already in the .gitignore file to prevent accidentally committing your credentials.
 
-### Running the Application
+### Running the Application Locally
 
-To run the application in development mode:
+The application consists of both a Next.js frontend and a Socket.io server. You can run both simultaneously with:
 
 ```bash
-# Start the Socket.io server first
-node server.js
-
-# In a separate terminal, start the Next.js frontend
-npx next dev
-# or
+# Run both frontend and backend concurrently
 npm run dev
-# or
-yarn dev
-
-# Install dotenv if not already installed
-npm install dotenv
 ```
 
-This will start both the Next.js frontend on port 3000 and the Socket.io server on port 3001.
+Or run them separately:
+
+```bash
+# Start the Socket.io server
+npm run dev:server
+
+# In a separate terminal, start the Next.js frontend
+npm run dev:client
+```
+
+The application will be available at:
+- Frontend: http://localhost:3000
+- Socket.io server: http://localhost:3002
 
 ### Building for Production
 
@@ -91,51 +99,14 @@ npm run start
 yarn start
 ```
 
-## Deploying to Vercel
+## Deploying to GitHub
 
-### Frontend Deployment
+When pushing to GitHub, make sure to:
 
-1. Push your code to a GitHub, GitLab, or Bitbucket repository
-2. Create an account on [Vercel](https://vercel.com)
-3. Click "Add New" → "Project"
-4. Import your Git repository
-5. Configure project settings:
-   - Framework Preset: Next.js
-   - Root Directory: (leave as default)
-   - Environment Variables: Add your YouTube API key as `NEXT_PUBLIC_YOUTUBE_API_KEY`
-6. Click "Deploy"
-
-### Server Deployment
-
-Since this application has a separate Socket.IO server (server.js), you need to deploy it separately:
-
-#### Option 1: Deploy to Render.com
-1. Create an account on [Render](https://render.com)
-2. Click "New" → "Web Service"
-3. Connect your repository
-4. Configure the service:
-   - Name: melodyverse-socket-server
-   - Build Command: `npm install`
-   - Start Command: `node server.js`
-   - Environment Variables: Add your configuration if needed
-5. Click "Create Web Service"
-
-#### Option 2: Deploy to Railway
-1. Create an account on [Railway](https://railway.app)
-2. Create a new project
-3. Add your GitHub repository
-4. Configure the service:
-   - Start Command: `node server.js`
-   - Add environment variables if needed
-5. Deploy
-
-### Connecting Frontend to Server
-
-After deploying both services, update your frontend environment variables:
-
-1. Go to your Vercel project settings
-2. Add `NEXT_PUBLIC_SOCKET_URL` with the URL of your deployed Socket.IO server
-3. Redeploy the frontend if necessary
+1. **Never include real API keys** in your commits
+2. Use environment variables on your deployment platform
+3. If you need to test API functionality locally, always use `.env` (which is gitignored)
+4. Consider using GitHub Secrets if setting up CI/CD workflows
 
 ## Project Structure
 

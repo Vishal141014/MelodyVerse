@@ -32,6 +32,7 @@ export default function RoomPage() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Derived state
   const isHost = userId === roomState?.hostId;
@@ -42,35 +43,54 @@ export default function RoomPage() {
   useEffect(() => {
     if (!usernameEntered) return;
     
-    // Connect to the server
-    const socketUrl = 'https://melody-verse-socket-server.onrender.com';
+    // Connect to the server using environment variable
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3002';
     console.log(`Connecting to socket server at: ${socketUrl}`);
     
     const newSocket = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      timeout: 30000
+      timeout: 30000,
+      autoConnect: true
     });
     
     setSocket(newSocket);
     
-    // Handle self user ID
-    newSocket.on('user:self', (data: { id: string }) => {
-      setUserId(data.id);
+    // Handle connection errors
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      setError('Server connection failed. Please try again later.');
     });
     
-    // Join the room once connected
+    // Handle connection timeouts
+    newSocket.on('connect_timeout', () => {
+      console.error('Socket connection timeout');
+      setError('Connection timed out. Please check your network and try again.');
+    });
+    
+    // Handle successful connection
     newSocket.on('connect', () => {
-      console.log('Connected to server, joining room:', roomId);
+      console.log('Connected to server with ID:', newSocket.id);
+      setError(null);
+      
+      // Join the room
+      console.log('Joining room:', roomId, 'as user:', username);
       newSocket.emit('join-room', { roomId, username });
+    });
+    
+    // Handle self user ID
+    newSocket.on('user:self', (data: { id: string }) => {
+      console.log('Received self user ID:', data.id);
+      setUserId(data.id);
     });
     
     // Handle room data
     newSocket.on('room:joined', (data: RoomState) => {
       console.log('Joined room, received state:', data);
       setRoomState(data);
+      setError(null);
     });
     
     // Handle room updates
@@ -217,6 +237,29 @@ export default function RoomPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white flex flex-col">
+      {/* Error notification */}
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 fixed top-0 left-0 right-0 z-50 flex justify-between items-center">
+          <div>
+            <p className="font-bold">Connection Error</p>
+            <p>{error}</p>
+          </div>
+          <button 
+            onClick={() => {
+              if (socket) {
+                socket.connect();
+              } else {
+                // Force page refresh to reconnect
+                window.location.reload();
+              }
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+          >
+            Reconnect
+          </button>
+        </div>
+      )}
+      
       {/* Header with room info */}
       <header className="bg-white border-b border-pink-medium/10 shadow-sm p-4">
         <div className="flex items-center justify-between max-w-6xl mx-auto">

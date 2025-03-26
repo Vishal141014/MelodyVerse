@@ -15,7 +15,7 @@ const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 
 // Environment variables with fallbacks
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -40,20 +40,43 @@ const corsOptions = {
   origin: NODE_ENV === 'production' 
     ? [CLIENT_URL, /\.vercel\.app$/] // Allow Vercel deployments
     : '*', // Allow all in development
-  methods: ['GET', 'POST'],
-  credentials: true
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 const app = express();
+app.use(cors(corsOptions));
+
+// Add health check endpoint
+app.get('/', (req, res) => {
+  res.send({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    message: 'MelodyVerse Socket Server is running'
+  });
+});
 
 // Create HTTP server and Socket.io instance
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: corsOptions
+  cors: corsOptions,
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  connectTimeout: 45000,
+  debug: true
+});
+
+// Add custom middleware to log connection attempts
+io.use((socket, next) => {
+  console.log(`Connection attempt from ${socket.handshake.address} with transport ${socket.conn.transport.name}`);
+  next();
 });
 
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+  console.log(`User connected: ${socket.id} from ${socket.handshake.address}`);
   
   // Send the user their own ID
   socket.emit('user:self', { id: socket.id });

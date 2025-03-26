@@ -24,16 +24,38 @@ yarn-error.log*
 
 # local env files
 .env*.local
-
-# vercel
-.vercel
+.env
+.env.development
+.env.test
+.env.production
 .env.development.local
 .env.test.local
 .env.production.local
+
+# vercel
+.vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
 # ytsr dumps
-/node_modules/ytsr/dumps 
+/node_modules/ytsr/dumps
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# logs
+logs
+*.log
+
+# server-only directory (not needed)
+/server-only/
+
+# deployment files
+vercel.json
+Procfile
+.vercel.json 
